@@ -582,8 +582,8 @@ namespace ScottPlot.Control
                 mouseEvent = EventFactory.CreateMouseUpClearRender();
             ProcessEvent(mouseEvent);
 
-            //if (IsRightDown && MouseDownDragged == false)
-            //    RightClicked(null, EventArgs.Empty);
+            if (IsRightDown && MouseDownDragged == false)
+                RightClicked(null, EventArgs.Empty);
 
             if (IsRightDown && MouseDownDragged == true)//chang right-click to zoom rectangle, not open menu.
             {
@@ -611,17 +611,17 @@ namespace ScottPlot.Control
         /// </summary>
         public void DoubleClick()
         {
-            //if (Configuration.DoubleClickBenchmark)
-            //{
-            //    IUIEvent mouseEvent = EventFactory.CreateBenchmarkToggle();
-            //    ProcessEvent(mouseEvent);
-            //}
-
-            //if (IsRightDown && MouseDownDragged == false)//change right-double-click to auto axis.
+            if (Configuration.DoubleClickBenchmark)
             {
-                IUIEvent mouseEvent = EventFactory.CreateMouseAutoAxis();
+                IUIEvent mouseEvent = EventFactory.CreateBenchmarkToggle();
                 ProcessEvent(mouseEvent);
             }
+
+            //if (IsRightDown && MouseDownDragged == false)//change right-double-click to auto axis.
+            //{
+            //    IUIEvent mouseEvent = EventFactory.CreateMouseAutoAxis();
+            //    ProcessEvent(mouseEvent);
+            //}
         }
 
         /// <summary>
