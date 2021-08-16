@@ -497,7 +497,8 @@ namespace ScottPlot.Control
             else if (IsLeftDown && !input.AltDown && Configuration.LeftClickDragPan)
                 mouseMoveEvent = EventFactory.CreateMousePan(input);
             else if (IsRightDown && Configuration.RightClickDragZoom)
-                mouseMoveEvent = EventFactory.CreateMouseZoom(input);
+                //mouseMoveEvent = EventFactory.CreateMouseZoom(input);
+                mouseMoveEvent = EventFactory.CreateMouseMovedToZoomRectangle(input.X, input.Y);//chang right-click drag to zoom rectangle, not zoom.
             else if (IsZoomingRectangle)
                 mouseMoveEvent = EventFactory.CreateMouseMovedToZoomRectangle(input.X, input.Y);
 
@@ -581,8 +582,14 @@ namespace ScottPlot.Control
                 mouseEvent = EventFactory.CreateMouseUpClearRender();
             ProcessEvent(mouseEvent);
 
-            if (IsRightDown && MouseDownDragged == false)
-                RightClicked(null, EventArgs.Empty);
+            //if (IsRightDown && MouseDownDragged == false)
+            //    RightClicked(null, EventArgs.Empty);
+
+            if (IsRightDown && MouseDownDragged == true)//chang right-click to zoom rectangle, not open menu.
+            {
+                mouseEvent = EventFactory.CreateApplyZoomRectangleEvent(input.X, input.Y);
+                ProcessEvent(mouseEvent);
+            }
 
             IsMiddleDown = false;
             IsRightDown = false;
@@ -604,9 +611,15 @@ namespace ScottPlot.Control
         /// </summary>
         public void DoubleClick()
         {
-            if (Configuration.DoubleClickBenchmark)
+            //if (Configuration.DoubleClickBenchmark)
+            //{
+            //    IUIEvent mouseEvent = EventFactory.CreateBenchmarkToggle();
+            //    ProcessEvent(mouseEvent);
+            //}
+
+            //if (IsRightDown && MouseDownDragged == false)//change right-double-click to auto axis.
             {
-                IUIEvent mouseEvent = EventFactory.CreateBenchmarkToggle();
+                IUIEvent mouseEvent = EventFactory.CreateMouseAutoAxis();
                 ProcessEvent(mouseEvent);
             }
         }
