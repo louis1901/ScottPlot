@@ -39,6 +39,9 @@ namespace ScottPlot.Demo.WPF.WpfDemos
             HighlightedPoint.MarkerSize = 10;
             HighlightedPoint.MarkerShape = ScottPlot.MarkerShape.openCircle;
             HighlightedPoint.IsVisible = false;
+
+            // perform an initial render
+            wpfPlot1.Refresh();
         }
 
         private void wpfPlot1_MouseMove(object sender, MouseEventArgs e)
@@ -57,7 +60,7 @@ namespace ScottPlot.Demo.WPF.WpfDemos
             if (LastHighlightedIndex != pointIndex)
             {
                 LastHighlightedIndex = pointIndex;
-                wpfPlot1.Render();
+                wpfPlot1.Refresh();
             }
 
             // update the GUI to describe the highlighted point

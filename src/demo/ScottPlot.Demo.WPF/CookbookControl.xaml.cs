@@ -19,35 +19,28 @@ namespace ScottPlot.Demo.WPF
     /// </summary>
     public partial class CookbookControl : UserControl
     {
+        readonly Dictionary<string, Cookbook.RecipeSource> Recipes;
+
         public CookbookControl()
         {
             InitializeComponent();
-        }
-
-        private BitmapImage BmpImageFromBmp(System.Drawing.Bitmap bmp)
-        {
-            System.IO.MemoryStream stream = new System.IO.MemoryStream();
-            bmp.Save(stream, System.Drawing.Imaging.ImageFormat.Png); // use PNG to support transparency
-            BitmapImage bmpImage = new BitmapImage();
-            bmpImage.BeginInit();
-            stream.Seek(0, System.IO.SeekOrigin.Begin);
-            bmpImage.StreamSource = stream;
-            bmpImage.EndInit();
-            return bmpImage;
+            Recipes = Cookbook.RecipeJson.GetRecipes();
+            wpfPlot1.Configuration.WarnIfRenderNotCalledManually = false;
         }
 
         public void LoadDemo(string id)
         {
             var recipe = Cookbook.Locate.GetRecipe(id);
+            string source = Recipes is null ? Cookbook.RecipeJson.NotFoundMessage : Recipes[id].Code;
 
             DemoNameLabel.Content = recipe.Title;
             SourceCodeLabel.Content = recipe.ID;
             DescriptionTextbox.Text = recipe.Description;
-            SourceTextBox.Text = Cookbook.Locate.RecipeSourceCode(id);
+            SourceTextBox.Text = source.Replace("\n", Environment.NewLine);
 
             wpfPlot1.Reset();
             recipe.ExecuteRecipe(wpfPlot1.Plot);
-            wpfPlot1.Render();
+            wpfPlot1.Refresh();
         }
     }
 }

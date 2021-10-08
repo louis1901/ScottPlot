@@ -26,7 +26,7 @@ namespace ScottPlot
         /// <summary>
         /// This object can be used to modify advanced behaior and customization of this user control.
         /// </summary>
-        public Control.Configuration Configuration => Backend.Configuration;
+        public readonly Control.Configuration Configuration;
 
         /// <summary>
         /// This event is invoked any time the axis limits are modified.
@@ -57,9 +57,8 @@ namespace ScottPlot
         [Obsolete("use 'PlottableDropped' instead", error: true)]
         public event EventHandler MouseDropPlottable;
 
-        private readonly Control.ControlBackEnd Backend = new(1, 1);
+        private readonly Control.ControlBackEnd Backend;
         private readonly Dictionary<Cursor, System.Windows.Input.Cursor> Cursors;
-        private readonly DispatcherTimer PlottableCountTimer = new();
         private readonly Control.DisplayScale DisplayScale = new();
         private float ScaledWidth => (float)ActualWidth * DisplayScale.ScaleRatio;
         private float ScaledHeight => (float)ActualHeight * DisplayScale.ScaleRatio;
@@ -69,10 +68,22 @@ namespace ScottPlot
 
         public WpfPlot()
         {
+            Backend = new Control.ControlBackEnd(1, 1, GetType().Name);
+            Backend.Resize((float)ActualWidth, (float)ActualHeight, useDelayedRendering: false);
+            Backend.BitmapChanged += new EventHandler(OnBitmapChanged);
+            Backend.BitmapUpdated += new EventHandler(OnBitmapUpdated);
+            Backend.CursorChanged += new EventHandler(OnCursorChanged);
+            Backend.RightClicked += new EventHandler(OnRightClicked);
+            Backend.AxesChanged += new EventHandler(OnAxesChanged);
+            Backend.PlottableDragged += new EventHandler(OnPlottableDragged);
+            Backend.PlottableDropped += new EventHandler(OnPlottableDropped);
+            Configuration = Backend.Configuration;
+
             if (DesignerProperties.GetIsInDesignMode(this))
             {
                 try
                 {
+                    Configuration.WarnIfRenderNotCalledManually = false;
                     Plot.Title($"ScottPlot {Plot.Version}");
                     Plot.Render();
                 }
@@ -88,15 +99,6 @@ namespace ScottPlot
                 }
             }
 
-            Backend.Resize((float)ActualWidth, (float)ActualHeight, useDelayedRendering: false);
-            Backend.BitmapChanged += new EventHandler(OnBitmapChanged);
-            Backend.BitmapUpdated += new EventHandler(OnBitmapUpdated);
-            Backend.CursorChanged += new EventHandler(OnCursorChanged);
-            Backend.RightClicked += new EventHandler(OnRightClicked);
-            Backend.AxesChanged += new EventHandler(OnAxesChanged);
-            Backend.PlottableDragged += new EventHandler(OnPlottableDragged);
-            Backend.PlottableDropped += new EventHandler(OnPlottableDropped);
-
             Cursors = new Dictionary<Cursor, System.Windows.Input.Cursor>()
             {
                 [ScottPlot.Cursor.Arrow] = System.Windows.Input.Cursors.Arrow,
@@ -109,17 +111,12 @@ namespace ScottPlot
             };
 
             RightClicked += DefaultRightClickEvent;
-            PlottableCountTimer.Tick += PlottableCountTimer_Tick;
-            PlottableCountTimer.Interval = new TimeSpan(0, 0, 0, 0, milliseconds: 10);
 
             InitializeComponent();
 
             ErrorLabel.Visibility = System.Windows.Visibility.Hidden;
 
             Backend.StartProcessingEvents();
-
-            Loaded += (_, _) => PlottableCountTimer.Start();
-            Unloaded += (_, _) => PlottableCountTimer.Stop();
         }
 
         /// <summary>
@@ -146,15 +143,36 @@ namespace ScottPlot
         /// Re-render the plot and update the image displayed by this control.
         /// </summary>
         /// <param name="lowQuality">disable anti-aliasing to produce faster (but lower quality) plots</param>
-        public void Render(bool lowQuality = false) => Backend.Render(lowQuality);
+        public void Refresh(bool lowQuality = false)
+        {
+            Backend.WasManuallyRendered = true;
+            Backend.Render(lowQuality);
+        }
+
+        // TODO: mark this obsolete in ScottPlot 5.0 (favor Refresh)
+        /// <summary>
+        /// Re-render the plot and update the image displayed by this control.
+        /// </summary>
+        /// <param name="lowQuality">disable anti-aliasing to produce faster (but lower quality) plots</param>
+        public void Render(bool lowQuality = false) => Refresh(lowQuality);
 
         /// <summary>
-        /// Request the control re-render the next time it is available.
+        /// Request the control to refresh the next time it is available.
         /// This method does not block the calling thread.
         /// </summary>
-        public void RenderRequest(RenderType renderType = RenderType.LowQualityThenHighQualityDelayed) => Backend.RenderRequest(renderType);
+        public void RefreshRequest(RenderType renderType = RenderType.LowQualityThenHighQualityDelayed)
+        {
+            Backend.WasManuallyRendered = true;
+            Backend.RenderRequest(renderType);
+        }
 
-        private void PlottableCountTimer_Tick(object sender, EventArgs e) => Backend.RenderIfPlottableListChanged();
+        // TODO: mark this obsolete in ScottPlot 5.0 (favor Refresh)
+        /// <summary>
+        /// Request the control to refresh the next time it is available.
+        /// This method does not block the calling thread.
+        /// </summary>
+        public void RenderRequest(RenderType renderType = RenderType.LowQualityThenHighQualityDelayed) => RefreshRequest(renderType);
+
         private void OnBitmapChanged(object sender, EventArgs e) => PlotImage.Source = BmpImageFromBmp(Backend.GetLatestBitmap());
         private void OnBitmapUpdated(object sender, EventArgs e) => PlotImage.Source = BmpImageFromBmp(Backend.GetLatestBitmap());
         private void OnCursorChanged(object sender, EventArgs e) => Cursor = Cursors[Backend.Cursor];
@@ -235,7 +253,7 @@ namespace ScottPlot
         private void RightClickMenu_Copy_Click(object sender, EventArgs e) => System.Windows.Clipboard.SetImage(BmpImageFromBmp(Backend.GetLatestBitmap()));
         private void RightClickMenu_Help_Click(object sender, EventArgs e) => new WPF.HelpWindow().Show();
         private void RightClickMenu_OpenInNewWindow_Click(object sender, EventArgs e) => new WpfPlotViewer(Plot).Show();
-        private void RightClickMenu_AutoAxis_Click(object sender, EventArgs e) { Plot.AxisAuto(); Render(); }
+        private void RightClickMenu_AutoAxis_Click(object sender, EventArgs e) { Plot.AxisAuto(); Refresh(); }
         private void RightClickMenu_SaveImage_Click(object sender, EventArgs e)
         {
             var sfd = new SaveFileDialog

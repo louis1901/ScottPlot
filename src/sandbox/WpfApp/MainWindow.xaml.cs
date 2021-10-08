@@ -12,18 +12,9 @@ namespace WpfApp
         {
             InitializeComponent();
 
-            Random rand = new(0);
-            int pointCount = 2_000;
-            double[] xs = ScottPlot.DataGen.Random(rand, pointCount);
-            double[] ys = ScottPlot.DataGen.Random(rand, pointCount);
-
-            WpfPlot1.Plot.Title("Blocking Render");
-            WpfPlot1.Plot.AddScatter(xs, ys);
-            WpfPlot1.Configuration.UseRenderQueue = false;
-
-            WpfPlot2.Plot.Title("Render Queue");
-            WpfPlot2.Plot.AddScatter(xs, ys);
-            WpfPlot2.Configuration.UseRenderQueue = true;
+            WpfPlot1.Plot.AddSignal(ScottPlot.DataGen.Sin(51));
+            WpfPlot1.Plot.AddSignal(ScottPlot.DataGen.Cos(51));
+            WpfPlot1.Refresh();
         }
     }
 }

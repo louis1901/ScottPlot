@@ -36,8 +36,9 @@ namespace ScottPlot
         /// <summary>
         /// Display an arrow pointing to a spot in coordinate space
         /// </summary>
-        public ScatterPlot AddArrow(double xTip, double yTip, double xBase, double yBase, float lineWidth = 5, Color? color = null)
+        public ArrowCoordinated AddArrow(double xTip, double yTip, double xBase, double yBase, float lineWidth = 5, Color? color = null)
         {
+            /*
             double[] xs = { xBase, xTip };
             double[] ys = { yBase, yTip };
             var plottable = new ScatterPlot(xs, ys)
@@ -47,6 +48,12 @@ namespace ScottPlot
                 Color = color ?? GetNextColor(),
                 ArrowheadLength = 3,
                 ArrowheadWidth = 3
+            };
+            */
+            var plottable = new ArrowCoordinated(xBase, yBase, xTip, yTip)
+            {
+                LineWidth = lineWidth,
+                Color = color ?? GetNextColor(),
             };
             Add(plottable);
             return plottable;
@@ -736,6 +743,27 @@ namespace ScottPlot
             Color[] fills = colors.Select(x => Color.FromArgb(50, x)).ToArray();
 
             RadarPlot plottable = new(values, colors, fills, independentAxes, maxValues);
+            Add(plottable);
+
+            if (disableFrameAndGrid)
+            {
+                Frameless();
+                Grid(enable: false);
+            }
+
+            return plottable;
+        }
+
+        /// <summary>
+        /// Add a radial gauge plot (a chart where data is represented by concentric circular gauges)
+        /// </summary>
+        /// <param name="values">Array of gauge values</param>
+        /// <param name="disableFrameAndGrid">Also make the plot frameless and disable its grid</param>
+        /// <returns>The radial gaugle plot that was just created and added to the plot</returns>
+        public ScottPlot.Plottable.RadialGaugePlot AddRadialGauge(double[] values, bool disableFrameAndGrid = true)
+        {
+            Color[] colors = Palette.GetColors(values.Length);
+            ScottPlot.Plottable.RadialGaugePlot plottable = new(values, colors);
             Add(plottable);
 
             if (disableFrameAndGrid)

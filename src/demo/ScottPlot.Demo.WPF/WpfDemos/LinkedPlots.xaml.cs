@@ -27,6 +27,10 @@ namespace ScottPlot.Demo.WPF.WpfDemos
 
             // create a list of plot controls we can easily iterate through later
             WpfPlots = new WpfPlot[] { wpfPlot1, wpfPlot2 };
+
+            // perform an initial render
+            wpfPlot1.Refresh();
+            wpfPlot2.Refresh();
         }
 
         private void AxesChanged(object sender, EventArgs e)
@@ -42,7 +46,7 @@ namespace ScottPlot.Demo.WPF.WpfDemos
                 // disable events briefly to prevent an infinite loop
                 wp.Configuration.AxesChangedEventEnabled = false;
                 wp.Plot.SetAxisLimits(newAxisLimits);
-                wp.Render();
+                wp.Refresh();
                 wp.Configuration.AxesChangedEventEnabled = true;
             }
         }

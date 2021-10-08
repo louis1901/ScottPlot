@@ -57,7 +57,6 @@ namespace ScottPlot.Plottable
             var baseLimits = base.GetAxisLimits();
             var newXMin = Convert.ToDouble(Xs[MinRenderIndex]) + OffsetX;
             var newXMax = Convert.ToDouble(Xs[MaxRenderIndex]) + OffsetX;
-            Debug.WriteLine($"Limits: {newXMin} {newXMax}");
             return new AxisLimits(newXMin, newXMax, baseLimits.YMin, baseLimits.YMax);
         }
 
@@ -197,6 +196,24 @@ namespace ScottPlot.Plottable
                     float x1 = dims.DataWidth + dims.DataOffsetX;
                     float y1 = lastPoint.Y + (afterPoint.Y - lastPoint.Y) * (x1 - lastPoint.X) / (afterPoint.X - lastPoint.X);
                     PointsToDraw[PointsToDraw.Length - 1] = new PointF(x1, y1);
+                }
+
+                // Fill below the line
+                switch (FillType)
+                {
+                    case FillType.NoFill:
+                        break;
+                    case FillType.FillAbove:
+                        FillToInfinity(dims, gfx, PointsToDraw[0].X, PointsToDraw[PointsToDraw.Length - 1].X, PointsToDraw, true);
+                        break;
+                    case FillType.FillBelow:
+                        FillToInfinity(dims, gfx, PointsToDraw[0].X, PointsToDraw[PointsToDraw.Length - 1].X, PointsToDraw, false);
+                        break;
+                    case FillType.FillAboveAndBelow:
+                        FillToBaseline(dims, gfx, PointsToDraw[0].X, PointsToDraw[PointsToDraw.Length - 1].X, PointsToDraw, BaselineY);
+                        break;
+                    default:
+                        throw new InvalidOperationException("unsupported fill type");
                 }
 
                 // Draw lines
